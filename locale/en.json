@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Slumber Pavilion",
+    "description": "Slumber Pavilion — moves archived DSH sessions out of the load path into a dormant archive. Asleep, never deleted, always restorable."
+  }
+}

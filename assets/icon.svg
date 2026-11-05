@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="沉眠阁：浅底深形，旋转四十五度后四瓣呈菱形排列，中央一枚金点，四角紫色直角折线大幅出血出画">
+  <rect width="128" height="128" fill="#F3F0E9"/>
+
+  <g transform="translate(64 64) rotate(45) scale(0.95) translate(-64 -64)">
+    <rect x="30" y="30" width="28" height="28" fill="#1B1725"/>
+    <rect x="70" y="30" width="28" height="28" fill="#1B1725"/>
+    <rect x="30" y="70" width="28" height="28" fill="#1B1725"/>
+    <rect x="70" y="70" width="28" height="28" fill="#1B1725"/>
+
+    <rect x="60" y="60" width="8" height="8" fill="#B08A3E"/>
+
+    <g fill="none" stroke="#6B5CA5" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter">
+      <path d="M58 14 L14 14 L14 58"/>
+      <path d="M70 14 L114 14 L114 58"/>
+      <path d="M58 114 L14 114 L14 70"/>
+      <path d="M70 114 L114 114 L114 70"/>
+    </g>
+  </g>
+</svg>

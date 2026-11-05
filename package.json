@@ -1,0 +1,66 @@
+{
+  "name": "slumberpavilion",
+  "version": "0.1.0",
+  "description": "Slumber Pavilion (沉眠阁) — moves archived DSH sessions out of the load path into a dormant archive, and ships tools to archive, read, restore or purge them later.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./reader": {
+      "default": "./lib/reader.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./assets/icon.svg"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "archive",
+    "session",
+    "memory",
+    "slumber",
+    "pavilion"
+  ],
+  "license": "MIT",
+  "author": "AngleNaris",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AngleNaris/slumberpavilion.git"
+  },
+  "homepage": "https://github.com/AngleNaris/slumberpavilion#readme",
+  "bugs": {
+    "url": "https://github.com/AngleNaris/slumberpavilion/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.4",
+    "@deepseek-ai/dsh-tools": ">=0.0.1-rc.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  }
+}
