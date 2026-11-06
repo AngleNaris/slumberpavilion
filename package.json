@@ -1,6 +1,6 @@
 {
   "name": "slumberpavilion",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Slumber Pavilion (沉眠阁) — moves archived DSH sessions out of the load path into a dormant archive, and ships tools to archive, read, restore or purge them later.",
   "type": "module",
   "main": "lib/index.js",
@@ -25,7 +25,8 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=22.15.0"
+    "node": ">=22.15.0",
+    "dsh": ">=0.2.1-rc.2 <0.4.0-0"
   },
   "keywords": [
     "deepseek",

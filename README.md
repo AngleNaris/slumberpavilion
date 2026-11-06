@@ -64,6 +64,8 @@ ln -s ../plugins/slumberpavilion ~/.dsh/profiles/desktop/node_modules/slumberpav
 | `moveLogs` | `true` | 是否移动 `sessions` 下的日志目录 |
 | `moveProjections` | `true` | 是否移动 `session_projcache` 记录（**内存收益主要来自这里**） |
 
+两个开关**互相独立**：只开 `moveProjections` 也能把投影记录搬走（日志留在原地），反之亦然。
+
 ## 读取归档
 
 ### 方式一：命令行（不依赖 DSH，随时可用）
@@ -76,6 +78,10 @@ node lib/cli.js info f8ab825e
 
 ### 方式二：Agent 工具
 
+> **装上就在干活：** 插件加载后约 15 秒跑第一轮扫描，之后每 `checkIntervalMs`（默认 20 秒）
+> 一次，把**已归档**会话的日志与投影记录从 `~/.dsh` 搬进 `~/DSH-Archive`。只是打标签、
+> 不想动文件的场景请先把 `enabled` 关掉。
+
 注册五个工具，对话里可直接调用：
 
 | 工具 | 作用 |
@@ -84,7 +90,7 @@ node lib/cli.js info f8ab825e
 | `archive_read` | 读一个归档会话；`keyword` 过滤、`compact` 只留对话轮次、`maxChars` 逐条截断 |
 | `archive_session` | **执行归档**：标记 + 立刻搬走，不用等后台扫描；先 `dryRun=true` 看清目标 |
 | `archive_restore` | **还原归档**：搬回 `.dsh`、撤销归档标记、清清单；同样支持 `dryRun` |
-| `archive_delete` | 永久删除一个归档会话；先 `dryRun=true` 看清目标再动手 |
+| `archive_delete` | **永久删除**一个归档会话（日志 + 投影文件 + 清单条目）：**不可恢复，且工具调用没有二次确认**；调用前务必先跑 `dryRun=true` |
 
 `archive_session` 走的是宿主的 `ctx.workspaceRegistry.archiveSession()`，所以归档状态
 是 DSH 自己写进 `workspace.json` 的，不靠手改文件；标记落盘后插件立刻 `sweep()` 一轮，
