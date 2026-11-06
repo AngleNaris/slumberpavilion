@@ -28,6 +28,9 @@
     "node": ">=22.15.0",
     "dsh": ">=0.2.1-rc.2 <0.4.0-0"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "keywords": [
     "deepseek",
     "harness",
@@ -51,6 +54,9 @@
     "url": "https://github.com/AngleNaris/slumberpavilion/issues"
   },
   "dsh": {
+    "engines": {
+      "dsh": ">=0.2.1-rc.2 <0.4.0-0"
+    },
     "bundle": {
       "patch": "./cordis.patch.yml"
     }

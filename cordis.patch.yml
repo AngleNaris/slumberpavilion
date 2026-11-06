@@ -3,7 +3,8 @@
 # 安装：把本包加进 profile 的 dsh.profile.bundles，下次启动加载器会自动应用这一层。
 #
 # 归档根目录留空（''）时使用默认值 ~/DSH-Archive。
-# 所有字段都是 volatile：在运行时改完立即生效，不需要重启。
+# 以下是宿主装配用的内部默认参数；插件安装即用，无需用户配置，也不提供独立设置界面。
+# Config schema 的 volatile 标记描述宿主侧参数行为，不代表用户设置界面。
 - insert:
     - id: slumber-pavilion
       name: slumberpavilion
