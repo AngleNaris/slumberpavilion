@@ -2,6 +2,12 @@
 
 把 DSH 里「已归档」的会话**真正搬出加载路径**，并内置读取归档内容的能力。
 
+沉眠阁保持极简、免配置：安装并加载后即可使用，不提供独立的用户配置界面，也不需要用户设置参数。
+**自动搬移是插件的设计行为**：加载约 15 秒后首次扫描，后台按 20 秒间隔检查归档列表，
+把已归档会话的日志目录和投影记录从 `~/.dsh` 移至 `~/DSH-Archive`；使用 `DSH_HOME`
+的宿主则从该目录读取。搬移保留原文和还原清单；`archive_delete` 是单独的永久删除操作，
+**不可恢复，工具调用没有二次确认**。
+
 ## 它为什么需要存在
 
 DSH 的「归档」只是一个标签，写进 `storages/workspace.json` 的 `archivedSessionIds`。
@@ -24,7 +30,21 @@ DSH 的「归档」只是一个标签，写进 `storages/workspace.json` 的 `ar
 2. 把它的日志目录与投影记录**移动**到 `~/DSH-Archive`（不是删除）
 3. `manifest.json` 记下来源与去向，随时可还原
 
+## 兼容性
+
+- 声明的 DSH 宿主范围为 `>=0.2.1-rc.2 <0.4.0-0`；已记录的桌面实测版本仅为
+  **DSH 0.2.1-rc.3**。范围声明不代表其他版本均已完成实测。
+- Node.js 要求 `>=22.15.0`，用于读取 zstd 会话日志；桌面版以其内置 Node.js 为准。
+- 插件依赖宿主的 `tools`、`workspaceRegistry` 服务，以及 `sessions`、
+  `storages/workspace.json` 和 `storages/session_projcache/sessions` 的内部布局。
+  宿主改变这些接口或文件布局时，需要重新验证兼容性。
+- `package.json` 在 `dsh.engines.dsh` 声明宿主范围，并在顶层 `engines.dsh` 保留同值，
+  供兼容读取使用；这两处都是发布元数据，无需用户配置。
+
 ## 安装
+
+在 DSH 插件商店安装沉眠阁并由宿主加载即可，无需填写配置或修改插件参数。
+手动集成到 profile 时，在该 profile 目录安装 npm 包：
 
 ```bash
 npm install slumberpavilion
@@ -34,7 +54,7 @@ npm install slumberpavilion
 
 ```json
 "dependencies": {
-  "slumberpavilion": "^0.1.0"
+  "slumberpavilion": "^0.1.1"
 },
 "dsh": {
   "profile": {
@@ -52,19 +72,15 @@ npm install slumberpavilion
 ln -s ../plugins/slumberpavilion ~/.dsh/profiles/desktop/node_modules/slumberpavilion
 ```
 
-## 配置
+## 安装后的行为
 
-在 `cordis.patch.yml` 里，全部字段都是 volatile（改完热生效）：
+归档搬移默认自动进行，无需额外启用。插件只搬移已被 DSH 标记为归档的会话，
+不会由后台扫描主动归档普通会话。`~/DSH-Archive/manifest.json` 记录原路径与归档路径，
+可通过 `archive_list` 查看，再用 `archive_read` 读取或 `archive_restore` 搬回。
 
-| 字段 | 默认 | 含义 |
-|---|---|---|
-| `enabled` | `true` | 总开关 |
-| `archiveRoot` | `''` | 归档根目录，留空 = `~/DSH-Archive` |
-| `checkIntervalMs` | `20000` | 检查间隔（毫秒） |
-| `moveLogs` | `true` | 是否移动 `sessions` 下的日志目录 |
-| `moveProjections` | `true` | 是否移动 `session_projcache` 记录（**内存收益主要来自这里**） |
-
-两个开关**互相独立**：只开 `moveProjections` 也能把投影记录搬走（日志留在原地），反之亦然。
+源码中的 `Config` schema 与 `cordis.patch.yml` 参数用于 Cordis 宿主装配、内部实现和测试，
+并不代表本插件提供了用户设置界面。`volatile` 是宿主侧参数的标记，不是要求用户修改参数。
+内部日志搬移与投影搬移逻辑分别判断，默认都会执行；正常使用无需选择或调整它们。
 
 ## 读取归档
 
@@ -77,10 +93,6 @@ node lib/cli.js info f8ab825e
 ```
 
 ### 方式二：Agent 工具
-
-> **装上就在干活：** 插件加载后约 15 秒跑第一轮扫描，之后每 `checkIntervalMs`（默认 20 秒）
-> 一次，把**已归档**会话的日志与投影记录从 `~/.dsh` 搬进 `~/DSH-Archive`。只是打标签、
-> 不想动文件的场景请先把 `enabled` 关掉。
 
 注册五个工具，对话里可直接调用：
 

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Slumber Pavilion",
-    "description": "Slumber Pavilion — moves archived DSH sessions out of the load path into a dormant archive. Asleep, never deleted, always restorable."
+    "description": "Slumber Pavilion — works without configuration. About 15 seconds after loading, automatically moves archived session logs and projections from ~/.dsh to ~/DSH-Archive with a restore manifest. archive_delete permanently deletes archived content, is irreversible and has no second confirmation."
   }
 }
