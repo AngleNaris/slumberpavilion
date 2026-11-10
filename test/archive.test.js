@@ -34,6 +34,18 @@ function fixture(t, config = {}) {
 	const disposers = [];
 	const warnings = [];
 	const unarchived = [];
+	const attached = [];
+	const archivedIds = [archivedId];
+	const workspacePath = path.join(root, "workspace");
+	fs.mkdirSync(workspacePath, { recursive: true });
+	const workspaceEntity = {
+		path: workspacePath,
+		sessionIds: [archivedId],
+		async attachSession(id) {
+			attached.push(id);
+			if (!this.sessionIds.includes(id)) this.sessionIds.push(id);
+		},
+	};
 	t.after(() => {
 		for (const dispose of disposers.reverse()) dispose?.();
 		if (previousHome === undefined) delete process.env.DSH_HOME;
@@ -47,10 +59,19 @@ function fixture(t, config = {}) {
 		effect(fn) { disposers.push(fn()); },
 		logger: { info() {}, warn(value) { warnings.push(value); } },
 		tools: { register(tool) { tools.set(tool.name, tool); return () => tools.delete(tool.name); } },
-		workspaceRegistry: { async unarchiveSession(id) { unarchived.push(id); } },
+		workspaceRegistry: {
+			async unarchiveSession(id) {
+				const at = archivedIds.indexOf(id);
+				if (at >= 0) archivedIds.splice(at, 1);
+				unarchived.push(id);
+			},
+			get archivedSessionIds() { return archivedIds; },
+			list() { return [workspaceEntity]; },
+		},
 	}, config);
 	return {
-		home, archive, logs, projection, tools, warnings, unarchived,
+		home, archive, logs, projection, tools, warnings, unarchived, attached, archivedIds,
+		workspace: workspaceEntity,
 		manifest: () => JSON.parse(fs.readFileSync(path.join(archive, "manifest.json"), "utf8")),
 	};
 }
@@ -123,4 +144,35 @@ test("delete dryRun is read-only; one subsequent call deletes archived fixtures 
 	assert.equal(f.manifest().sessions.length, 0);
 	assert.equal(f.manifest().projcache.length, 0);
 	assert.equal(fs.existsSync(f.logs(liveId)), true);
+});
+
+test("archive_read reads an uncompressed .jsonl archive instead of requiring .zstd", async (t) => {
+	const f = fixture(t);
+	t.mock.timers.tick(15000);
+	const output = await f.tools.get("archive_read").execute({ session: archivedId });
+	assert.equal(output.includes(archivedId), true);
+});
+
+test("the self-archive guard matches one conversation across the session- spelling", async (t) => {
+	const f = fixture(t);
+	t.mock.timers.tick(15000);
+	const output = await f.tools
+		.get("archive_session")
+		.execute({ session: liveId }, { agent: { id: "session-" + liveId } });
+	assert.equal(output.startsWith("拒绝："), true);
+	assert.equal(fs.existsSync(f.logs(liveId)), true);
+});
+
+test("archiving records the owning workspace so restore can re-attach a dropped session", async (t) => {
+	const f = fixture(t);
+	t.mock.timers.tick(15000);
+	assert.equal(f.manifest().sessions[0].wsPath, f.workspace.path);
+	assert.equal(f.manifest().sessions[0].sessionId, archivedId);
+	// 宿主只要写过一次工作区，就会剔掉日志已不在盘上的会话。
+	f.workspace.sessionIds = [];
+	const output = await f.tools.get("archive_restore").execute({ session: archivedId });
+	assert.deepEqual(f.attached, [archivedId]);
+	assert.equal(output.includes("已挂回工作区：" + f.workspace.path), true);
+	// 归档标记按宿主的 ID 写法撤销，撤销后归档集合里不再有它。
+	assert.equal(f.archivedIds.length, 0);
 });
