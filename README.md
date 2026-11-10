@@ -30,9 +30,10 @@ DSH 的「归档」只是一个标签，写进 `storages/workspace.json` 的 `ar
 2. 把它的日志目录与投影记录**移动**到 `~/DSH-Archive`（不是删除）
 3. `manifest.json` 记下来源与去向，随时可还原
 
-### 0.1.2 更新
+### 0.1.3 更新
 
 - 归档前记录原工作区路径和宿主使用的会话 ID，还原时补回工作区归属。
+- 每次挂回后读取宿主实际公开的会话列表；重启后旧记录被头索引过滤时，对同一 ID 最多补试一次，确认可见才报告成功。不会主动 detach，也不会承诺重启必然恢复。
 - 当前会话防护与撤销归档标记同时识别裸 UUID 和 `session-` 前缀。
 - 归档读取支持默认的 zstd 日志及关闭压缩时的明文 `.jsonl`。
 - 明确内存边界：移动磁盘文件不会清理当前进程的投影缓存，需完全退出并重启 DSH，
@@ -41,8 +42,8 @@ DSH 的「归档」只是一个标签，写进 `storages/workspace.json` 的 `ar
 ## 兼容性
 
 - 声明的 DSH 宿主范围为 `>=0.2.1-rc.2 <0.4.0-0`；桌面实测基线为
-  **DSH 0.2.1-rc.3**。0.1.2 已针对 **DSH 0.2.2-rc.1** 核对宿主接口，并通过
-  10 项隔离测试，覆盖归属恢复、ID 前缀防护与明文日志读取；范围声明不代表逐版端到端验证。
+  **DSH 0.2.1-rc.3**。0.1.3 已针对 **DSH 0.2.2-rc.1** 核对宿主接口，并通过
+  12 项隔离测试，覆盖归属恢复、重启后的隐藏旧记录、挂回无效时禁止假报成功、ID 前缀防护与明文日志读取；范围声明不代表逐版端到端验证。
 - Node.js 要求 `>=22.15.0`，用于读取 zstd 会话日志；桌面版以其内置 Node.js 为准。
 - 插件依赖宿主的 `tools`、`workspaceRegistry` 服务，以及 `sessions`、
   `storages/workspace.json` 和 `storages/session_projcache/sessions` 的内部布局。
@@ -63,7 +64,7 @@ npm install slumberpavilion
 
 ```json
 "dependencies": {
-  "slumberpavilion": "^0.1.2"
+  "slumberpavilion": "^0.1.3"
 },
 "dsh": {
   "profile": {

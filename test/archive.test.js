@@ -176,3 +176,44 @@ test("archiving records the owning workspace so restore can re-attach a dropped 
 	// 归档标记按宿主的 ID 写法撤销，撤销后归档集合里不再有它。
 	assert.equal(f.archivedIds.length, 0);
 });
+
+test("restore reindexes a raw workspace member hidden by the restarted host header index", async (t) => {
+	const f = fixture(t);
+	t.mock.timers.tick(15000);
+	// The archive mark may already have been cleared without rewriting the workspace record.
+	f.archivedIds.length = 0;
+	let recorded = [archivedId];
+	const indexed = new Set();
+	const attempts = [];
+	Object.defineProperty(f.workspace, "sessionIds", {
+		configurable: true,
+		get() { return recorded.filter((id) => indexed.has(id)); },
+	});
+	t.mock.method(f.workspace, "attachSession", async (id) => {
+		attempts.push(id);
+		// DSH 0.2.2-rc.1 skips the header read for a raw record member, then
+		// mutate() removes IDs absent from the canonical-cwd header index.
+		if (!recorded.includes(id)) {
+			if (!fs.existsSync(f.logs(id))) throw new Error("session header missing");
+			indexed.add(id);
+			recorded.push(id);
+		}
+		recorded = recorded.filter((value) => indexed.has(value));
+	});
+	const output = await f.tools.get("archive_restore").execute({ session: archivedId });
+	assert.deepEqual(f.workspace.sessionIds, [archivedId]);
+	assert.deepEqual(attempts, [archivedId, archivedId]);
+	assert.equal(output.includes("已挂回工作区：" + f.workspace.path), true);
+});
+
+test("restore does not report workspace success when attach resolves without visible membership", async (t) => {
+	const f = fixture(t);
+	t.mock.timers.tick(15000);
+	f.workspace.sessionIds = [];
+	t.mock.method(f.workspace, "attachSession", async () => {});
+	const output = await f.tools.get("archive_restore").execute({ session: archivedId });
+	assert.equal(output.includes("已挂回工作区："), false);
+	assert.equal(output.includes("⚠"), true);
+	assert.equal(output.includes("宿主未确认会话归属"), true);
+	assert.equal(fs.existsSync(f.logs(archivedId)), true);
+});
